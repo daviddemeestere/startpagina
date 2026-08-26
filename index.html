@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Symbaloo Startpagina</title>
+  <title>Startpagina</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: #1e293b;
@@ -22,8 +17,6 @@
       padding: 30px 15px;
       color: #ffffff;
     }
-
-    /* Bovenbalk met Zoeken & Acties */
     .top-bar {
       display: flex;
       flex-wrap: wrap;
@@ -34,7 +27,6 @@
       max-width: 600px;
       margin-bottom: 25px;
     }
-
     .search-form {
       display: flex;
       flex: 1;
@@ -44,7 +36,6 @@
       padding: 4px 6px 4px 16px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
-
     .search-input {
       border: none;
       outline: none;
@@ -53,7 +44,6 @@
       color: #1e293b;
       background: transparent;
     }
-
     .search-button {
       background: #3b82f6;
       border: none;
@@ -63,7 +53,6 @@
       font-weight: 600;
       cursor: pointer;
     }
-
     .action-btn {
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -73,19 +62,10 @@
       cursor: pointer;
       font-weight: 600;
       font-size: 0.85rem;
-      transition: background 0.2s;
     }
+    .action-btn:hover { background: rgba(255, 255, 255, 0.3); }
+    .action-btn.active { background: #ef4444; border-color: #ef4444; }
 
-    .action-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .action-btn.active {
-      background: #ef4444;
-      border-color: #ef4444;
-    }
-
-    /* Symbaloo Webmix Grid Container */
     .webmix-board {
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(10px);
@@ -94,21 +74,16 @@
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
-
     .tile-grid {
       display: grid;
       grid-template-columns: repeat(5, 85px);
       gap: 10px;
       justify-content: center;
     }
-
     @media (max-width: 520px) {
-      .tile-grid {
-        grid-template-columns: repeat(3, 85px);
-      }
+      .tile-grid { grid-template-columns: repeat(3, 85px); }
     }
 
-    /* Symbaloo Tegels */
     .tile {
       display: flex;
       flex-direction: column;
@@ -127,13 +102,11 @@
       overflow: hidden;
       cursor: pointer;
     }
-
     .tile:hover {
       transform: translateY(-4px) scale(1.05);
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
       z-index: 10;
     }
-
     .tile img {
       width: 32px;
       height: 32px;
@@ -141,7 +114,6 @@
       object-fit: contain;
       pointer-events: none;
     }
-
     .tile span {
       font-size: 0.68rem;
       font-weight: 600;
@@ -155,17 +127,14 @@
       pointer-events: none;
     }
 
-    /* Bewerken-modus stijlen */
     body.edit-mode .tile {
       animation: shake 0.3s infinite alternate;
       border: 2px dashed #3b82f6;
     }
-
     @keyframes shake {
       0% { transform: rotate(-1deg); }
       100% { transform: rotate(1deg); }
     }
-
     .add-tile {
       background: rgba(255, 255, 255, 0.15);
       border: 2px dashed rgba(255, 255, 255, 0.4);
@@ -174,11 +143,6 @@
       font-weight: bold;
     }
 
-    .add-tile:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    /* Modal / Pop-up venster */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -188,11 +152,7 @@
       justify-content: center;
       z-index: 100;
     }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
+    .modal-overlay.open { display: flex; }
     .modal {
       background: #1e293b;
       padding: 24px;
@@ -200,21 +160,7 @@
       width: 100%;
       max-width: 360px;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
-
-    .modal h2 {
-      margin-bottom: 15px;
-      font-size: 1.2rem;
-    }
-
-    .modal label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 4px;
-      color: #94a3b8;
-    }
-
     .modal input {
       width: 100%;
       padding: 8px 12px;
@@ -223,16 +169,8 @@
       border: 1px solid #334155;
       background: #0f172a;
       color: #fff;
-      font-size: 0.9rem;
     }
-
-    .modal-buttons {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      margin-top: 10px;
-    }
-
+    .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
     .btn-save { background: #22c55e; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
     .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; margin-right: auto; }
     .btn-cancel { background: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
@@ -246,28 +184,20 @@
       <button type="submit" class="search-button">Zoek</button>
     </form>
     <button id="toggle-edit" class="action-btn">✏️ Bewerken</button>
-    <button id="reset-default" class="action-btn" title="Herstel standaard tegels">🔄 Reset</button>
   </div>
 
   <main class="webmix-board">
-    <nav class="tile-grid" id="tile-grid" aria-label="Symbaloo Webmix"></nav>
+    <nav class="tile-grid" id="tile-grid"></nav>
   </main>
 
-  <!-- Modal voor toevoegen / bewerken -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
-      <h2 id="modal-title">Blokje Bewerken</h2>
+      <h2 id="modal-title" style="margin-bottom: 15px;">Blokje Bewerken</h2>
       <form id="tile-form">
         <input type="hidden" id="tile-id">
-        <label for="tile-name">Naam op blokje</label>
-        <input type="text" id="tile-name" required placeholder="Bijv. YouTube">
-        
-        <label for="tile-url">Website URL</label>
-        <input type="url" id="tile-url" required placeholder="https://www.youtube.com">
-
-        <label for="tile-icon">Icoon URL (optioneel)</label>
-        <input type="url" id="tile-icon" placeholder="https://www.youtube.com/favicon.ico">
-
+        <input type="text" id="tile-name" required placeholder="Naam (bijv. YouTube)">
+        <input type="url" id="tile-url" required placeholder="URL (https://...)">
+        <input type="url" id="tile-icon" placeholder="Icoon URL (optioneel)">
         <div class="modal-buttons">
           <button type="button" class="btn-delete" id="btn-delete">Verwijderen</button>
           <button type="button" class="btn-cancel" id="btn-cancel">Annuleren</button>
@@ -278,47 +208,47 @@
   </div>
 
   <script>
-    const defaultTiles = [
-      { id: '1', name: 'Automatus', url: 'https://app.automatus.be/?id=au68ee', icon: 'https://app.automatus.be/favicon.ico' },
-      { id: '2', name: 'Google Maps', url: 'https://maps.google.com/', icon: 'https://maps.google.com/favicon.ico' },
-      { id: '3', name: 'Google Drive', url: 'https://drive.google.com/', icon: 'https://drive.google.com/favicon.ico' },
-      { id: '4', name: 'Google Agenda', url: 'https://www.google.com/calendar/', icon: 'https://www.google.com/favicon.ico' },
-      { id: '5', name: 'Gmail', url: 'https://mail.google.com/', icon: 'https://mail.google.com/favicon.ico' },
-      { id: '6', name: 'Classroom', url: 'https://classroom.google.com/', icon: 'https://classroom.google.com/favicon.ico' },
-      { id: '7', name: 'Socrative', url: 'https://www.socrative.com/', icon: 'https://www.socrative.com/favicon.ico' },
-      { id: '8', name: 'ICT Noord-Limburg', url: 'https://ictnoordlimburg.be/', icon: 'https://ictnoordlimburg.be/favicon.ico' },
-      { id: '9', name: 'Blokken', url: 'https://www.fi.uu.nl/toepassingen/28020/', icon: 'https://www.fi.uu.nl/favicon.ico' },
-      { id: '10', name: 'Rekendiploma', url: 'https://rekendiploma.onlineklas.nl/', icon: 'https://rekendiploma.onlineklas.nl/favicon.ico' },
-      { id: '11', name: 'Woordenboek', url: 'http://www.vandale.be/opzoeken/woordenboek', icon: 'http://www.vandale.be/favicon.ico' },
-      { id: '12', name: 'Encyclopedie', url: 'https://nl.wikipedia.org/wiki/Hoofdpagina', icon: 'https://nl.wikipedia.org/favicon.ico' },
-      { id: '13', name: 'YouTube', url: 'https://www.youtube.com/', icon: 'https://www.youtube.com/favicon.ico' },
-      { id: '14', name: 'Translate', url: 'https://translate.google.be/?hl=nl', icon: 'https://translate.google.be/favicon.ico' },
-      { id: '15', name: 'Timetimer', url: 'http://www.schoolbordportaal.nl/data/timer%20time/index.php?id=timer-dynamiet', icon: 'http://www.schoolbordportaal.nl/favicon.ico' },
-      { id: '16', name: 'Prowise', url: 'https://presenter10.prowise.com/', icon: 'https://presenter10.prowise.com/favicon.ico' },
-      { id: '17', name: 'Groepsfoto', url: 'http://www.schoolbordportaal.nl/data/foto/index.htm', icon: 'http://www.schoolbordportaal.nl/favicon.ico' },
-      { id: '18', name: 'LOWAN NT2', url: 'https://www.lowan.nl/vo/leerlijnen/nt2-startpakket/', icon: 'https://www.lowan.nl/favicon.ico' },
-      { id: '19', name: 'Scoodle', url: 'https://pe.scoodle.be/pe/Agenda', icon: 'https://pe.scoodle.be/favicon.ico' },
-      { id: '20', name: 'Kangoeroe', url: 'https://www.usolvit.be/servlet/StartKangoeroe?taal=NL', icon: 'https://www.usolvit.be/favicon.ico' },
-      { id: '21', name: 'Schoolwebsite', url: 'http://www.vbsspesnostra.be/', icon: 'http://www.vbsspesnostra.be/favicon.ico' },
-      { id: '22', name: 'Informat', url: 'https://start.informatsoftware.be/informat/informat.web/login.aspx?', icon: 'https://start.informatsoftware.be/favicon.ico' },
-      { id: '23', name: 'MindMup 2', url: 'https://drive.mindmup.com/#', icon: 'https://drive.mindmup.com/favicon.ico' },
-      { id: '24', name: 'Classroomscreen', url: 'http://www.classroomscreen.com/', icon: 'http://www.classroomscreen.com/favicon.ico' },
-      { id: '25', name: 'ClassDojo', url: 'https://teach.classdojo.com/#/classes/6a8eeb04759e8c7101f3cf66/points', icon: 'https://teach.classdojo.com/favicon.ico' }
-    ];
+    const BIN_ID = '6a8ef503da38895dfe137a34';
+    const API_KEY = '$2a$10$oOBz9UbuSP94u4C2ce71RuDqm5F5Aa5XJcte6qGJOF3sPqTWgF.ve';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    let tiles = JSON.parse(localStorage.getItem('symbaloo_tiles')) || defaultTiles;
+    let tiles = [];
     let isEditMode = false;
 
     const gridEl = document.getElementById('tile-grid');
     const toggleEditBtn = document.getElementById('toggle-edit');
-    const resetDefaultBtn = document.getElementById('reset-default');
     const modalOverlay = document.getElementById('modal-overlay');
     const tileForm = document.getElementById('tile-form');
     const btnCancel = document.getElementById('btn-cancel');
     const btnDelete = document.getElementById('btn-delete');
 
-    function saveToStorage() {
-      localStorage.setItem('symbaloo_tiles', JSON.stringify(tiles));
+    async function loadTiles() {
+      gridEl.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Laden...</p>';
+      try {
+        const res = await fetch(`${API_URL}/latest`, {
+          headers: { 'X-Master-Key': API_KEY }
+        });
+        const data = await res.json();
+        tiles = data.record;
+        renderGrid();
+      } catch (err) {
+        gridEl.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Fout bij laden van data.</p>';
+      }
+    }
+
+    async function syncToCloud() {
+      try {
+        await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY
+          },
+          body: JSON.stringify(tiles)
+        });
+      } catch (err) {
+        alert('Fout bij opslaan in de cloud!');
+      }
     }
 
     function renderGrid() {
@@ -330,10 +260,8 @@
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         
-        a.innerHTML = `
-          <img src="${tile.icon || getFallbackIcon(tile.url)}" alt="" loading="lazy" onerror="this.src='https://www.google.com/s2/favicons?domain=${tile.url}&sz=64'">
-          <span>${tile.name}</span>
-        `;
+        const iconUrl = tile.icon || `https://www.google.com/s2/favicons?domain=${tile.url}&sz=64`;
+        a.innerHTML = `<img src="${iconUrl}" alt="" loading="lazy"><span>${tile.name}</span>`;
 
         a.addEventListener('click', (e) => {
           if (isEditMode) {
@@ -341,7 +269,6 @@
             openModal(tile);
           }
         });
-
         gridEl.appendChild(a);
       });
 
@@ -349,18 +276,8 @@
         const addBtn = document.createElement('div');
         addBtn.className = 'tile add-tile';
         addBtn.innerText = '+';
-        addBtn.title = 'Nieuw blokje toevoegen';
         addBtn.addEventListener('click', () => openModal());
         gridEl.appendChild(addBtn);
-      }
-    }
-
-    function getFallbackIcon(url) {
-      try {
-        const domain = new URL(url).origin;
-        return `${domain}/favicon.ico`;
-      } catch {
-        return '';
       }
     }
 
@@ -371,7 +288,7 @@
         document.getElementById('tile-id').value = tile.id;
         document.getElementById('tile-name').value = tile.name;
         document.getElementById('tile-url').value = tile.url;
-        document.getElementById('tile-icon').value = tile.icon;
+        document.getElementById('tile-icon').value = tile.icon || '';
         btnDelete.style.display = 'block';
       } else {
         document.getElementById('modal-title').innerText = 'Nieuw Blokje';
@@ -394,24 +311,12 @@
       renderGrid();
     });
 
-    resetDefaultBtn.addEventListener('click', () => {
-      if (confirm('Weet je zeker dat je alle blokjes wilt herstellen naar de beginstand?')) {
-        tiles = [...defaultTiles];
-        saveToStorage();
-        renderGrid();
-      }
-    });
-
-    tileForm.addEventListener('submit', (e) => {
+    tileForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('tile-id').value;
       const name = document.getElementById('tile-name').value;
       const url = document.getElementById('tile-url').value;
-      let icon = document.getElementById('tile-icon').value;
-
-      if (!icon) {
-        icon = getFallbackIcon(url);
-      }
+      const icon = document.getElementById('tile-icon').value;
 
       if (id) {
         const tile = tiles.find(t => t.id === id);
@@ -421,32 +326,27 @@
           tile.icon = icon;
         }
       } else {
-        tiles.push({
-          id: Date.now().toString(),
-          name,
-          url,
-          icon
-        });
+        tiles.push({ id: Date.now().toString(), name, url, icon });
       }
 
-      saveToStorage();
       renderGrid();
       closeModal();
+      await syncToCloud();
     });
 
-    btnDelete.addEventListener('click', () => {
+    btnDelete.addEventListener('click', async () => {
       const id = document.getElementById('tile-id').value;
       if (id && confirm('Weet je zeker dat je dit blokje wilt verwijderen?')) {
         tiles = tiles.filter(t => t.id !== id);
-        saveToStorage();
         renderGrid();
         closeModal();
+        await syncToCloud();
       }
     });
 
     btnCancel.addEventListener('click', closeModal);
 
-    renderGrid();
+    loadTiles();
   </script>
 </body>
 </html>
