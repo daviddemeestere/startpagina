@@ -87,15 +87,14 @@
       padding: 16px;
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
     }
     .tile-grid {
       display: grid;
-      grid-template-columns: repeat(5, 85px);
       gap: 10px;
       justify-content: center;
-    }
-    @media (max-width: 520px) {
-      .tile-grid { grid-template-columns: repeat(3, 85px); }
     }
 
     .tile {
@@ -351,8 +350,27 @@
       }
     }
 
+    function updateGridColumns() {
+      const totalItems = pageData.tiles.length + (isEditMode ? 1 : 0);
+      if (totalItems === 0) return;
+
+      // Bereken de beschikbare schermbreedte
+      const availableWidth = window.innerWidth - 60;
+      const maxColsOnScreen = Math.max(1, Math.floor((availableWidth + 10) / 95));
+
+      // Bepaal het aantal kolommen voor een zo vierkant mogelijk rooster (√N)
+      const idealSquareCols = Math.ceil(Math.sqrt(totalItems));
+
+      // Gebruik het ideale vierkante aantal kolommen, tenzij het scherm te smal is
+      const cols = Math.min(idealSquareCols, maxColsOnScreen);
+
+      gridEl.style.gridTemplateColumns = `repeat(${cols}, 85px)`;
+    }
+
     function renderGrid() {
+      updateGridColumns();
       gridEl.innerHTML = '';
+
       pageData.tiles.forEach((tile, index) => {
         const a = document.createElement('a');
         a.className = 'tile';
@@ -502,6 +520,7 @@
     });
 
     btnCancel.addEventListener('click', closeModal);
+    window.addEventListener('resize', updateGridColumns);
 
     loadData();
   </script>
