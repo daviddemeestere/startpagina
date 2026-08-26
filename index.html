@@ -8,29 +8,33 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #1e293b;
+      background-color: #1e293b;
       background-image: radial-gradient(circle at 50% 30%, #334155 0%, #0f172a 100%);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 30px 15px;
       color: #ffffff;
+      transition: background 0.3s ease;
     }
     .top-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 12px;
       justify-content: center;
       align-items: center;
       width: 100%;
-      max-width: 600px;
-      margin-bottom: 25px;
+      max-width: 650px;
+      margin-bottom: 20px;
     }
     .search-form {
       display: flex;
       flex: 1;
-      min-width: 280px;
+      min-width: 260px;
       background: #ffffff;
       border-radius: 25px;
       padding: 4px 6px 4px 16px;
@@ -62,9 +66,19 @@
       cursor: pointer;
       font-weight: 600;
       font-size: 0.85rem;
+      backdrop-filter: blur(5px);
     }
     .action-btn:hover { background: rgba(255, 255, 255, 0.3); }
     .action-btn.active { background: #ef4444; border-color: #ef4444; }
+
+    .welcome-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      display: none;
+    }
 
     .webmix-board {
       background: rgba(15, 23, 42, 0.65);
@@ -101,11 +115,16 @@
       transition: transform 0.18s ease-in-out, box-shadow 0.18s ease-in-out;
       overflow: hidden;
       cursor: pointer;
+      user-select: none;
     }
     .tile:hover {
       transform: translateY(-4px) scale(1.05);
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
       z-index: 10;
+    }
+    .tile.dragging {
+      opacity: 0.3;
+      transform: scale(0.95);
     }
     .tile img {
       width: 32px;
@@ -130,6 +149,10 @@
     body.edit-mode .tile {
       animation: shake 0.3s infinite alternate;
       border: 2px dashed #3b82f6;
+      cursor: grab;
+    }
+    body.edit-mode .tile:active {
+      cursor: grabbing;
     }
     @keyframes shake {
       0% { transform: rotate(-1deg); }
@@ -146,11 +169,12 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
+      backdrop-filter: blur(4px);
     }
     .modal-overlay.open { display: flex; }
     .modal {
@@ -160,6 +184,12 @@
       width: 100%;
       max-width: 360px;
       border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .modal label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 4px;
     }
     .modal input {
       width: 100%;
@@ -171,9 +201,9 @@
       color: #fff;
     }
     .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
-    .btn-save { background: #22c55e; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
-    .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; margin-right: auto; }
-    .btn-cancel { background: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+    .btn-save { background: #22c55e; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; margin-right: auto; font-weight: 600; }
+    .btn-cancel { background: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -183,24 +213,48 @@
       <input type="text" name="q" class="search-input" placeholder="Zoeken op Google..." aria-label="Zoeken">
       <button type="submit" class="search-button">Zoek</button>
     </form>
+    <button id="settings-btn" class="action-btn" style="display: none;">⚙️ Instellingen</button>
     <button id="toggle-edit" class="action-btn">✏️ Bewerken</button>
   </div>
+
+  <h1 id="welcome-title" class="welcome-title"></h1>
 
   <main class="webmix-board">
     <nav class="tile-grid" id="tile-grid"></nav>
   </main>
 
+  <!-- Modal voor blokje bewerken -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
       <h2 id="modal-title" style="margin-bottom: 15px;">Blokje Bewerken</h2>
       <form id="tile-form">
         <input type="hidden" id="tile-id">
-        <input type="text" id="tile-name" required placeholder="Naam (bijv. YouTube)">
-        <input type="url" id="tile-url" required placeholder="URL (https://...)">
-        <input type="url" id="tile-icon" placeholder="Icoon URL (optioneel)">
+        <label>Naam</label>
+        <input type="text" id="tile-name" required placeholder="bijv. YouTube">
+        <label>Link (URL)</label>
+        <input type="url" id="tile-url" required placeholder="https://...">
+        <label>Icoon URL (optioneel)</label>
+        <input type="url" id="tile-icon" placeholder="https://.../icoon.png">
         <div class="modal-buttons">
           <button type="button" class="btn-delete" id="btn-delete">Verwijderen</button>
           <button type="button" class="btn-cancel" id="btn-cancel">Annuleren</button>
+          <button type="submit" class="btn-save">Opslaan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal voor pagina instellingen -->
+  <div class="modal-overlay" id="settings-modal-overlay">
+    <div class="modal">
+      <h2 style="margin-bottom: 15px;">Pagina Instellingen</h2>
+      <form id="settings-form">
+        <label>Welkomsttekst</label>
+        <input type="text" id="setting-welcome" placeholder="bijv. Welkom op mijn startpagina!">
+        <label>Achtergrond URL of kleurcode</label>
+        <input type="text" id="setting-bg" placeholder="https://... of #1e293b (laat leeg voor standaard)">
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" id="btn-cancel-settings">Annuleren</button>
           <button type="submit" class="btn-save">Opslaan</button>
         </div>
       </form>
@@ -212,24 +266,47 @@
     const API_KEY = '$2a$10$oOBz9UbuSP94u4C2ce71RuDqm5F5Aa5XJcte6qGJOF3sPqTWgF.ve';
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    let tiles = [];
+    let pageData = {
+      settings: { welcomeText: '', bgUrl: '' },
+      tiles: []
+    };
+
     let isEditMode = false;
+    let draggedIndex = null;
+    let isDragging = false;
 
     const gridEl = document.getElementById('tile-grid');
+    const welcomeTitleEl = document.getElementById('welcome-title');
     const toggleEditBtn = document.getElementById('toggle-edit');
+    const settingsBtn = document.getElementById('settings-btn');
+    
     const modalOverlay = document.getElementById('modal-overlay');
     const tileForm = document.getElementById('tile-form');
     const btnCancel = document.getElementById('btn-cancel');
     const btnDelete = document.getElementById('btn-delete');
 
-    async function loadTiles() {
+    const settingsModalOverlay = document.getElementById('settings-modal-overlay');
+    const settingsForm = document.getElementById('settings-form');
+    const btnCancelSettings = document.getElementById('btn-cancel-settings');
+
+    async function loadData() {
       gridEl.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Laden...</p>';
       try {
         const res = await fetch(`${API_URL}/latest`, {
           headers: { 'X-Master-Key': API_KEY }
         });
         const data = await res.json();
-        tiles = data.record;
+        const record = data.record;
+
+        if (Array.isArray(record)) {
+          pageData.tiles = record;
+        } else if (record && record.tiles) {
+          pageData = record;
+        } else if (record && record.algemeen) {
+          pageData.tiles = record.algemeen;
+        }
+
+        applySettings();
         renderGrid();
       } catch (err) {
         gridEl.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Fout bij laden van data.</p>';
@@ -244,31 +321,89 @@
             'Content-Type': 'application/json',
             'X-Master-Key': API_KEY
           },
-          body: JSON.stringify(tiles)
+          body: JSON.stringify(pageData)
         });
       } catch (err) {
         alert('Fout bij opslaan in de cloud!');
       }
     }
 
+    function applySettings() {
+      const welcome = pageData.settings?.welcomeText || '';
+      const bg = pageData.settings?.bgUrl || '';
+
+      if (welcome.trim() !== '') {
+        welcomeTitleEl.innerText = welcome;
+        welcomeTitleEl.style.display = 'block';
+      } else {
+        welcomeTitleEl.style.display = 'none';
+      }
+
+      if (bg.trim() !== '') {
+        if (bg.startsWith('http://') || bg.startsWith('https://') || bg.startsWith('data:image')) {
+          document.body.style.backgroundImage = `url("${bg}")`;
+        } else {
+          document.body.style.background = bg;
+        }
+      } else {
+        document.body.style.background = '#1e293b';
+        document.body.style.backgroundImage = 'radial-gradient(circle at 50% 30%, #334155 0%, #0f172a 100%)';
+      }
+    }
+
     function renderGrid() {
       gridEl.innerHTML = '';
-      tiles.forEach(tile => {
+      pageData.tiles.forEach((tile, index) => {
         const a = document.createElement('a');
         a.className = 'tile';
         a.href = tile.url;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
+        a.draggable = isEditMode;
         
         const iconUrl = tile.icon || `https://www.google.com/s2/favicons?domain=${tile.url}&sz=64`;
         a.innerHTML = `<img src="${iconUrl}" alt="" loading="lazy"><span>${tile.name}</span>`;
 
+        a.addEventListener('dragstart', (e) => {
+          if (!isEditMode) return;
+          draggedIndex = index;
+          isDragging = true;
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => a.classList.add('dragging'), 0);
+        });
+
+        a.addEventListener('dragover', (e) => {
+          if (!isEditMode) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+
+        a.addEventListener('drop', async (e) => {
+          if (!isEditMode) return;
+          e.preventDefault();
+          if (draggedIndex !== null && draggedIndex !== index) {
+            const movedItem = pageData.tiles.splice(draggedIndex, 1)[0];
+            pageData.tiles.splice(index, 0, movedItem);
+            renderGrid();
+            await syncToCloud();
+          }
+        });
+
+        a.addEventListener('dragend', () => {
+          a.classList.remove('dragging');
+          draggedIndex = null;
+          setTimeout(() => { isDragging = false; }, 50);
+        });
+
         a.addEventListener('click', (e) => {
           if (isEditMode) {
             e.preventDefault();
-            openModal(tile);
+            if (!isDragging) {
+              openModal(tile);
+            }
           }
         });
+
         gridEl.appendChild(a);
       });
 
@@ -308,7 +443,29 @@
       document.body.classList.toggle('edit-mode', isEditMode);
       toggleEditBtn.classList.toggle('active', isEditMode);
       toggleEditBtn.innerText = isEditMode ? '✖️ Klaar' : '✏️ Bewerken';
+      settingsBtn.style.display = isEditMode ? 'inline-block' : 'none';
       renderGrid();
+    });
+
+    settingsBtn.addEventListener('click', () => {
+      document.getElementById('setting-welcome').value = pageData.settings?.welcomeText || '';
+      document.getElementById('setting-bg').value = pageData.settings?.bgUrl || '';
+      settingsModalOverlay.classList.add('open');
+    });
+
+    btnCancelSettings.addEventListener('click', () => {
+      settingsModalOverlay.classList.remove('open');
+    });
+
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      pageData.settings = {
+        welcomeText: document.getElementById('setting-welcome').value,
+        bgUrl: document.getElementById('setting-bg').value
+      };
+      applySettings();
+      settingsModalOverlay.classList.remove('open');
+      await syncToCloud();
     });
 
     tileForm.addEventListener('submit', async (e) => {
@@ -319,14 +476,14 @@
       const icon = document.getElementById('tile-icon').value;
 
       if (id) {
-        const tile = tiles.find(t => t.id === id);
+        const tile = pageData.tiles.find(t => t.id === id);
         if (tile) {
           tile.name = name;
           tile.url = url;
           tile.icon = icon;
         }
       } else {
-        tiles.push({ id: Date.now().toString(), name, url, icon });
+        pageData.tiles.push({ id: Date.now().toString(), name, url, icon });
       }
 
       renderGrid();
@@ -337,7 +494,7 @@
     btnDelete.addEventListener('click', async () => {
       const id = document.getElementById('tile-id').value;
       if (id && confirm('Weet je zeker dat je dit blokje wilt verwijderen?')) {
-        tiles = tiles.filter(t => t.id !== id);
+        pageData.tiles = pageData.tiles.filter(t => t.id !== id);
         renderGrid();
         closeModal();
         await syncToCloud();
@@ -346,7 +503,7 @@
 
     btnCancel.addEventListener('click', closeModal);
 
-    loadTiles();
+    loadData();
   </script>
 </body>
 </html>
