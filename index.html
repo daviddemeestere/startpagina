@@ -34,7 +34,7 @@
     .search-form {
       display: flex;
       flex: 1;
-      min-width: 260px;
+      min-width: 240px;
       background: #ffffff;
       border-radius: 25px;
       padding: 4px 6px 4px 16px;
@@ -56,6 +56,29 @@
       border-radius: 20px;
       font-weight: 600;
       cursor: pointer;
+    }
+    .user-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 6px 12px;
+      backdrop-filter: blur(5px);
+    }
+    .user-select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .user-select option {
+      background: #1e293b;
+      color: #fff;
     }
     .action-btn {
       background: rgba(255, 255, 255, 0.15);
@@ -150,9 +173,7 @@
       border: 2px dashed #3b82f6;
       cursor: grab;
     }
-    body.edit-mode .tile:active {
-      cursor: grabbing;
-    }
+    body.edit-mode .tile:active { cursor: grabbing; }
     @keyframes shake {
       0% { transform: rotate(-1deg); }
       100% { transform: rotate(1deg); }
@@ -212,6 +233,12 @@
       <input type="text" name="q" class="search-input" placeholder="Zoeken op Google..." aria-label="Zoeken">
       <button type="submit" class="search-button">Zoek</button>
     </form>
+    
+    <div class="user-select-wrap">
+      <span>👤</span>
+      <select id="user-select" class="user-select" title="Kies gebruiker"></select>
+    </div>
+
     <button id="settings-btn" class="action-btn" style="display: none;">⚙️ Instellingen</button>
     <button id="toggle-edit" class="action-btn">✏️ Bewerken</button>
   </div>
@@ -246,12 +273,14 @@
   <!-- Modal voor pagina instellingen -->
   <div class="modal-overlay" id="settings-modal-overlay">
     <div class="modal">
-      <h2 style="margin-bottom: 15px;">Pagina Instellingen</h2>
+      <h2 style="margin-bottom: 15px;">Instellingen</h2>
       <form id="settings-form">
-        <label>Welkomsttekst</label>
-        <input type="text" id="setting-welcome" placeholder="bijv. Welkom op mijn startpagina!">
+        <label>Welkomsttekst voor deze gebruiker</label>
+        <input type="text" id="setting-welcome" placeholder="bijv. Welkom Piet!">
         <label>Achtergrond URL of kleurcode</label>
-        <input type="text" id="setting-bg" placeholder="https://... of #1e293b (laat leeg voor standaard)">
+        <input type="text" id="setting-bg" placeholder="https://... of #1e293b">
+        <label>Nieuwe collega/gebruiker toevoegen</label>
+        <input type="text" id="setting-new-user" placeholder="Naam collega (optioneel)">
         <div class="modal-buttons">
           <button type="button" class="btn-cancel" id="btn-cancel-settings">Annuleren</button>
           <button type="submit" class="btn-save">Opslaan</button>
@@ -265,11 +294,14 @@
     const API_KEY = '$2a$10$oOBz9UbuSP94u4C2ce71RuDqm5F5Aa5XJcte6qGJOF3sPqTWgF.ve';
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    let pageData = {
-      settings: { welcomeText: '', bgUrl: '' },
-      tiles: []
+    let cloudData = {
+      users: ["Algemeen"],
+      profiles: {
+        "Algemeen": { settings: { welcomeText: '', bgUrl: '' }, tiles: [] }
+      }
     };
 
+    let currentUser = localStorage.getItem('startpage_active_user') || 'Algemeen';
     let isEditMode = false;
     let draggedIndex = null;
     let isDragging = false;
@@ -278,6 +310,7 @@
     const welcomeTitleEl = document.getElementById('welcome-title');
     const toggleEditBtn = document.getElementById('toggle-edit');
     const settingsBtn = document.getElementById('settings-btn');
+    const userSelectEl = document.getElementById('user-select');
     
     const modalOverlay = document.getElementById('modal-overlay');
     const tileForm = document.getElementById('tile-form');
@@ -297,16 +330,26 @@
         const data = await res.json();
         const record = data.record;
 
-        if (Array.isArray(record)) {
-          pageData.tiles = record;
-        } else if (record && record.tiles) {
-          pageData = record;
-        } else if (record && record.algemeen) {
-          pageData.tiles = record.algemeen;
+        // Migratie van oude data structuur naar multi-user structuur
+        if (record && record.profiles) {
+          cloudData = record;
+        } else {
+          let oldTiles = record?.tiles || (Array.isArray(record) ? record : []);
+          let oldSettings = record?.settings || { welcomeText: '', bgUrl: '' };
+          cloudData = {
+            users: ["Algemeen"],
+            profiles: {
+              "Algemeen": { settings: oldSettings, tiles: oldTiles }
+            }
+          };
         }
 
-        applySettings();
-        renderGrid();
+        if (!cloudData.users.includes(currentUser)) {
+          currentUser = cloudData.users[0] || 'Algemeen';
+        }
+
+        renderUserDropdown();
+        applyProfileAndRender();
       } catch (err) {
         gridEl.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Fout bij laden van data.</p>';
       }
@@ -320,16 +363,35 @@
             'Content-Type': 'application/json',
             'X-Master-Key': API_KEY
           },
-          body: JSON.stringify(pageData)
+          body: JSON.stringify(cloudData)
         });
       } catch (err) {
         alert('Fout bij opslaan in de cloud!');
       }
     }
 
-    function applySettings() {
-      const welcome = pageData.settings?.welcomeText || '';
-      const bg = pageData.settings?.bgUrl || '';
+    function renderUserDropdown() {
+      userSelectEl.innerHTML = '';
+      cloudData.users.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u;
+        opt.innerText = u;
+        if (u === currentUser) opt.selected = true;
+        userSelectEl.appendChild(opt);
+      });
+    }
+
+    function getCurrentProfile() {
+      if (!cloudData.profiles[currentUser]) {
+        cloudData.profiles[currentUser] = { settings: { welcomeText: '', bgUrl: '' }, tiles: [] };
+      }
+      return cloudData.profiles[currentUser];
+    }
+
+    function applyProfileAndRender() {
+      const profile = getCurrentProfile();
+      const welcome = profile.settings?.welcomeText || '';
+      const bg = profile.settings?.bgUrl || '';
 
       if (welcome.trim() !== '') {
         welcomeTitleEl.innerText = welcome;
@@ -348,20 +410,18 @@
         document.body.style.background = '#1e293b';
         document.body.style.backgroundImage = 'radial-gradient(circle at 50% 30%, #334155 0%, #0f172a 100%)';
       }
+
+      renderGrid();
     }
 
     function updateGridColumns() {
-      const totalItems = pageData.tiles.length + (isEditMode ? 1 : 0);
+      const profile = getCurrentProfile();
+      const totalItems = profile.tiles.length + (isEditMode ? 1 : 0);
       if (totalItems === 0) return;
 
-      // Bereken de beschikbare schermbreedte
       const availableWidth = window.innerWidth - 60;
       const maxColsOnScreen = Math.max(1, Math.floor((availableWidth + 10) / 95));
-
-      // Bepaal het aantal kolommen voor een zo vierkant mogelijk rooster (√N)
       const idealSquareCols = Math.ceil(Math.sqrt(totalItems));
-
-      // Gebruik het ideale vierkante aantal kolommen, tenzij het scherm te smal is
       const cols = Math.min(idealSquareCols, maxColsOnScreen);
 
       gridEl.style.gridTemplateColumns = `repeat(${cols}, 85px)`;
@@ -370,8 +430,9 @@
     function renderGrid() {
       updateGridColumns();
       gridEl.innerHTML = '';
+      const profile = getCurrentProfile();
 
-      pageData.tiles.forEach((tile, index) => {
+      profile.tiles.forEach((tile, index) => {
         const a = document.createElement('a');
         a.className = 'tile';
         a.href = tile.url;
@@ -400,8 +461,8 @@
           if (!isEditMode) return;
           e.preventDefault();
           if (draggedIndex !== null && draggedIndex !== index) {
-            const movedItem = pageData.tiles.splice(draggedIndex, 1)[0];
-            pageData.tiles.splice(index, 0, movedItem);
+            const movedItem = profile.tiles.splice(draggedIndex, 1)[0];
+            profile.tiles.splice(index, 0, movedItem);
             renderGrid();
             await syncToCloud();
           }
@@ -433,6 +494,12 @@
         gridEl.appendChild(addBtn);
       }
     }
+
+    userSelectEl.addEventListener('change', (e) => {
+      currentUser = e.target.value;
+      localStorage.setItem('startpage_active_user', currentUser);
+      applyProfileAndRender();
+    });
 
     function openModal(tile = null) {
       modalOverlay.classList.add('open');
@@ -466,8 +533,10 @@
     });
 
     settingsBtn.addEventListener('click', () => {
-      document.getElementById('setting-welcome').value = pageData.settings?.welcomeText || '';
-      document.getElementById('setting-bg').value = pageData.settings?.bgUrl || '';
+      const profile = getCurrentProfile();
+      document.getElementById('setting-welcome').value = profile.settings?.welcomeText || '';
+      document.getElementById('setting-bg').value = profile.settings?.bgUrl || '';
+      document.getElementById('setting-new-user').value = '';
       settingsModalOverlay.classList.add('open');
     });
 
@@ -477,31 +546,49 @@
 
     settingsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      pageData.settings = {
+      const profile = getCurrentProfile();
+      profile.settings = {
         welcomeText: document.getElementById('setting-welcome').value,
         bgUrl: document.getElementById('setting-bg').value
       };
-      applySettings();
+
+      const newUserInput = document.getElementById('setting-new-user').value.trim();
+      if (newUserInput !== '') {
+        if (!cloudData.users.includes(newUserInput)) {
+          cloudData.users.push(newUserInput);
+          // Kopieer bestaande blokjes als startpunt voor de nieuwe gebruiker
+          cloudData.profiles[newUserInput] = {
+            settings: { welcomeText: `Welkom ${newUserInput}!`, bgUrl: '' },
+            tiles: JSON.parse(JSON.stringify(profile.tiles))
+          };
+          currentUser = newUserInput;
+          localStorage.setItem('startpage_active_user', currentUser);
+          renderUserDropdown();
+        }
+      }
+
+      applyProfileAndRender();
       settingsModalOverlay.classList.remove('open');
       await syncToCloud();
     });
 
     tileForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const profile = getCurrentProfile();
       const id = document.getElementById('tile-id').value;
       const name = document.getElementById('tile-name').value;
       const url = document.getElementById('tile-url').value;
       const icon = document.getElementById('tile-icon').value;
 
       if (id) {
-        const tile = pageData.tiles.find(t => t.id === id);
+        const tile = profile.tiles.find(t => t.id === id);
         if (tile) {
           tile.name = name;
           tile.url = url;
           tile.icon = icon;
         }
       } else {
-        pageData.tiles.push({ id: Date.now().toString(), name, url, icon });
+        profile.tiles.push({ id: Date.now().toString(), name, url, icon });
       }
 
       renderGrid();
@@ -510,9 +597,10 @@
     });
 
     btnDelete.addEventListener('click', async () => {
+      const profile = getCurrentProfile();
       const id = document.getElementById('tile-id').value;
       if (id && confirm('Weet je zeker dat je dit blokje wilt verwijderen?')) {
-        pageData.tiles = pageData.tiles.filter(t => t.id !== id);
+        profile.tiles = profile.tiles.filter(t => t.id !== id);
         renderGrid();
         closeModal();
         await syncToCloud();
