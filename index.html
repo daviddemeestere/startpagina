@@ -355,20 +355,25 @@
       }
     }
 
-    async function syncToCloud() {
-      try {
-        await fetch(API_URL, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-          },
-          body: JSON.stringify(cloudData)
-        });
-      } catch (err) {
-        alert('Fout bij opslaan in de cloud!');
-      }
+async function syncToCloud() {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(cloudData)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(`Opslaan mislukt! Foutcode ${res.status}: ${errorData.message || 'Geen rechten'}`);
     }
+  } catch (err) {
+    alert('Netwerkfout bij opslaan in de cloud!');
+  }
+}
 
     function renderUserDropdown() {
       userSelectEl.innerHTML = '';
