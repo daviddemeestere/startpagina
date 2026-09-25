@@ -346,6 +346,20 @@
 
         if (!cloudData.users.includes(currentUser)) {
           currentUser = cloudData.users[0] || 'Algemeen';
+          // Automatische schoning van te zware icoontjes
+let isGecorrigeerd = false;
+Object.keys(cloudData.profiles).forEach(u => {
+  cloudData.profiles[u].tiles.forEach(t => {
+    if (t.icon && t.icon.length > 500) {
+      t.icon = ''; // Wist automatisch de te grote afbeelding
+      isGecorrigeerd = true;
+    }
+  });
+});
+
+if (isGecorrigeerd) {
+  syncToCloud();
+}
         }
 
         renderUserDropdown();
