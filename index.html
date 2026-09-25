@@ -553,6 +553,9 @@ async function syncToCloud() {
     });
 
     settingsBtn.addEventListener('click', () => {
+      const sizeKB = (JSON.stringify(cloudData).length / 1024).toFixed(1);
+document.getElementById('storage-info').innerText = `Opslaggebruik: ${sizeKB} KB / 100 KB`;
+      
       const profile = getCurrentProfile();
       document.getElementById('setting-welcome').value = profile.settings?.welcomeText || '';
       document.getElementById('setting-bg').value = profile.settings?.bgUrl || '';
